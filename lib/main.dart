@@ -36,7 +36,7 @@ class LockPage extends StatefulWidget {
 }
 
 class _LockPageState extends State<LockPage> {
-  // الهدية تفتح عند بداية يوم 26 أغسطس 2026
+  // تفتح الهدية عند بداية يوم 26 أغسطس 2026
   final DateTime unlockTime = DateTime(2026, 8, 26, 0, 0);
 
   Timer? timer;
@@ -224,16 +224,13 @@ class _LockPageState extends State<LockPage> {
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            const Color(0xFFFF719E),
+                        backgroundColor: const Color(0xFFFF719E),
                         foregroundColor: Colors.white,
                         minimumSize: const Size(220, 58),
                         elevation: 12,
-                        shadowColor:
-                            const Color(0xFFFF719E),
+                        shadowColor: const Color(0xFFFF719E),
                         shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       child: const Text(
@@ -263,8 +260,7 @@ class CelebrationPage extends StatefulWidget {
   const CelebrationPage({super.key});
 
   @override
-  State<CelebrationPage> createState() =>
-      _CelebrationPageState();
+  State<CelebrationPage> createState() => _CelebrationPageState();
 }
 
 class _CelebrationPageState extends State<CelebrationPage>
@@ -275,8 +271,12 @@ class _CelebrationPageState extends State<CelebrationPage>
   late AnimationController heartController;
 
   final AudioPlayer birthdayPlayer = AudioPlayer();
+  final AudioPlayer voicePlayer = AudioPlayer();
+  final AudioPlayer calmPlayer = AudioPlayer();
 
-  bool voicePlaying = false;
+  bool voiceStarted = false;
+  bool calmMusicStarted = false;
+  bool showMessage = false;
 
   @override
   void initState() {
@@ -307,10 +307,7 @@ class _CelebrationPageState extends State<CelebrationPage>
 
   Future<void> _playBirthdaySong() async {
     try {
-      await birthdayPlayer.setReleaseMode(
-        ReleaseMode.stop,
-      );
-
+      await birthdayPlayer.setReleaseMode(ReleaseMode.stop);
       await birthdayPlayer.setVolume(0.75);
 
       await birthdayPlayer.play(
@@ -322,32 +319,65 @@ class _CelebrationPageState extends State<CelebrationPage>
   }
 
   // ==========================================================
-  // تشغيل الفويس بعد إيقاف أغنية عيد الميلاد
+  // زر الهدية:
+  // Happy Birthday تتوقف
+  // ثم يبدأ التسجيل الصوتي
   // ==========================================================
 
-  Future<void> _playVoiceMessage() async {
+  Future<void> _startVoiceMessage() async {
+    if (voiceStarted) return;
+
+    voiceStarted = true;
+
     try {
-      // أولًا: إيقاف أغنية عيد الميلاد
+      // إيقاف أغنية عيد الميلاد
       await birthdayPlayer.stop();
 
-      if (!mounted) return;
+      // تشغيل التسجيل
+      await voicePlayer.setReleaseMode(ReleaseMode.stop);
+      await voicePlayer.setVolume(1.0);
 
-      setState(() {
-        voicePlaying = true;
-      });
-
-      // ثانيًا: تشغيل الفويس
-      await birthdayPlayer.play(
+      await voicePlayer.play(
         AssetSource('audio/voice_message.mp3'),
       );
+
+      // عندما ينتهي التسجيل
+      voicePlayer.onPlayerComplete.listen((event) {
+        _startCalmMusic();
+      });
     } catch (e) {
       debugPrint('Voice message error: $e');
+    }
+  }
 
-      if (!mounted) return;
+  // ==========================================================
+  // بعد انتهاء التسجيل تبدأ الموسيقى الهادئة
+  // ==========================================================
 
-      setState(() {
-        voicePlaying = false;
-      });
+  Future<void> _startCalmMusic() async {
+    if (calmMusicStarted) return;
+
+    calmMusicStarted = true;
+
+    try {
+      await voicePlayer.stop();
+
+      await calmPlayer.setReleaseMode(ReleaseMode.loop);
+      await calmPlayer.setVolume(0.35);
+
+      await calmPlayer.play(
+        AssetSource(
+          'audio/dopuu_aurelia_EDMUNDS_-_Golden_Brown_-_Slowed_Loop_(mp3.pm).mp3',
+        ),
+      );
+
+      if (mounted) {
+        setState(() {
+          showMessage = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Calm music error: $e');
     }
   }
 
@@ -357,7 +387,10 @@ class _CelebrationPageState extends State<CelebrationPage>
     balloonsController.dispose();
     confettiController.dispose();
     heartController.dispose();
+
     birthdayPlayer.dispose();
+    voicePlayer.dispose();
+    calmPlayer.dispose();
 
     super.dispose();
   }
@@ -368,7 +401,6 @@ class _CelebrationPageState extends State<CelebrationPage>
       backgroundColor: const Color(0xFFFFE7EF),
       body: Stack(
         children: [
-          // الخلفية
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -383,7 +415,6 @@ class _CelebrationPageState extends State<CelebrationPage>
             ),
           ),
 
-          // الكونفيتي
           Positioned.fill(
             child: AnimatedBuilder(
               animation: confettiController,
@@ -397,7 +428,6 @@ class _CelebrationPageState extends State<CelebrationPage>
             ),
           ),
 
-          // البالونات
           Positioned.fill(
             child: AnimatedBuilder(
               animation: balloonsController,
@@ -424,16 +454,13 @@ class _CelebrationPageState extends State<CelebrationPage>
                     curve: Curves.easeIn,
                   ),
                   child: Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
 
                       const Text(
                         '🎉',
-                        style: TextStyle(
-                          fontSize: 60,
-                        ),
+                        style: TextStyle(fontSize: 60),
                       ),
 
                       const SizedBox(height: 10),
@@ -469,8 +496,7 @@ class _CelebrationPageState extends State<CelebrationPage>
                         animation: heartController,
                         builder: (_, __) {
                           final scale =
-                              0.92 +
-                              heartController.value * 0.12;
+                              0.92 + heartController.value * 0.12;
 
                           return Transform.scale(
                             scale: scale,
@@ -478,14 +504,12 @@ class _CelebrationPageState extends State<CelebrationPage>
                               width: 150,
                               height: 150,
                               decoration: BoxDecoration(
-                                color: Colors.white
-                                    .withOpacity(0.75),
+                                color: Colors.white.withOpacity(0.75),
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(
-                                      0xFFFF719E,
-                                    ).withOpacity(0.35),
+                                    color: const Color(0xFFFF719E)
+                                        .withOpacity(0.35),
                                     blurRadius: 35,
                                     spreadRadius: 5,
                                   ),
@@ -494,9 +518,7 @@ class _CelebrationPageState extends State<CelebrationPage>
                               child: const Center(
                                 child: Text(
                                   '🎂',
-                                  style: TextStyle(
-                                    fontSize: 75,
-                                  ),
+                                  style: TextStyle(fontSize: 75),
                                 ),
                               ),
                             ),
@@ -511,20 +533,17 @@ class _CelebrationPageState extends State<CelebrationPage>
                         padding: const EdgeInsets.all(25),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.72),
-                          borderRadius:
-                              BorderRadius.circular(28),
+                          borderRadius: BorderRadius.circular(28),
                           border: Border.all(
                             color: Colors.white,
                             width: 2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFFB52D5E,
-                              ).withOpacity(0.12),
+                              color: const Color(0xFFB52D5E)
+                                  .withOpacity(0.12),
                               blurRadius: 25,
-                              offset:
-                                  const Offset(0, 10),
+                              offset: const Offset(0, 10),
                             ),
                           ],
                         ),
@@ -533,9 +552,7 @@ class _CelebrationPageState extends State<CelebrationPage>
                             Text(
                               '🎈  🎁  🎈',
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 27,
-                              ),
+                              style: TextStyle(fontSize: 27),
                             ),
 
                             SizedBox(height: 18),
@@ -543,14 +560,11 @@ class _CelebrationPageState extends State<CelebrationPage>
                             Text(
                               'اليوم مو يوم عادي...',
                               textAlign: TextAlign.center,
-                              textDirection:
-                                  TextDirection.rtl,
+                              textDirection: TextDirection.rtl,
                               style: TextStyle(
-                                color:
-                                    Color(0xFF6B1738),
+                                color: Color(0xFF6B1738),
                                 fontSize: 21,
-                                fontWeight:
-                                    FontWeight.bold,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
 
@@ -559,11 +573,9 @@ class _CelebrationPageState extends State<CelebrationPage>
                             Text(
                               'اليوم هو اليوم الذي وُلدت فيه إنسانة أصبحت غالية جدًا على قلبي ❤️',
                               textAlign: TextAlign.center,
-                              textDirection:
-                                  TextDirection.rtl,
+                              textDirection: TextDirection.rtl,
                               style: TextStyle(
-                                color:
-                                    Color(0xFF7E5263),
+                                color: Color(0xFF7E5263),
                                 fontSize: 17,
                                 height: 1.8,
                               ),
@@ -587,46 +599,118 @@ class _CelebrationPageState extends State<CelebrationPage>
 
                       const SizedBox(height: 35),
 
-                      ElevatedButton(
-                        onPressed: voicePlaying
-                            ? null
-                            : _playVoiceMessage,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color(0xFFFF719E),
-                          disabledBackgroundColor:
-                              const Color(0xFFFFA8BE),
-                          foregroundColor: Colors.white,
-                          minimumSize:
-                              const Size(230, 60),
-                          elevation: 10,
-                          shadowColor:
-                              const Color(0xFFFF719E),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(20),
+                      if (!showMessage)
+                        ElevatedButton(
+                          onPressed: _startVoiceMessage,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color(0xFFFF719E),
+                            foregroundColor: Colors.white,
+                            minimumSize: const Size(230, 60),
+                            elevation: 10,
+                            shadowColor:
+                                const Color(0xFFFF719E),
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(
+                            voiceStarted
+                                ? 'استمعي... 🎙️'
+                                : 'الهدية 🎁',
+                            style: const TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        child: Text(
-                          voicePlaying
-                              ? '🎙️ أسمعيها مني ❤️'
-                              : 'الهدية 🎁',
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.bold,
+
+                      if (showMessage)
+                        AnimatedOpacity(
+                          opacity: showMessage ? 1.0 : 0.0,
+                          duration:
+                              const Duration(milliseconds: 1200),
+                          child: Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(25),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.88),
+                              borderRadius:
+                                  BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFB52D5E)
+                                      .withOpacity(0.15),
+                                  blurRadius: 25,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: const Column(
+                              children: [
+                                Text(
+                                  '❤️',
+                                  style: TextStyle(fontSize: 50),
+                                ),
+
+                                SizedBox(height: 15),
+
+                                Text(
+                                  'إلى أجمل إنسانة في حياتي...',
+                                  textAlign: TextAlign.center,
+                                  textDirection: TextDirection.rtl,
+                                  style: TextStyle(
+                                    color: Color(0xFF6B1738),
+                                    fontSize: 23,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+
+                                SizedBox(height: 20),
+
+                                Text(
+                                  'كل عام وأنتِ بخير يا حبيبتي ❤️\n\n'
+                                  'أتمنى أن تكون هذه السنة أجمل سنة مرت عليكِ، '
+                                  'وأن تكون كل أيامك مليئة بالفرح والضحكة والسعادة.\n\n'
+                                  'يمكن تكون هذه مجرد هدية صغيرة، '
+                                  'لكن كل تفصيل فيها معمول من قلبي عشانكِ.\n\n'
+                                  'وجودك في حياتي شيء أنا ممتن له جدًا، '
+                                  'وأتمنى أن أقدر دائمًا أشوفك سعيدة.\n\n'
+                                  'عيد ميلاد سعيد يا أجمل هدية ❤️',
+                                  textAlign: TextAlign.center,
+                                  textDirection: TextDirection.rtl,
+                                  style: TextStyle(
+                                    color: Color(0xFF7E5263),
+                                    fontSize: 17,
+                                    height: 2.0,
+                                  ),
+                                ),
+
+                                SizedBox(height: 20),
+
+                                Text(
+                                  'أحبكِ ❤️',
+                                  textAlign: TextAlign.center,
+                                  textDirection: TextDirection.rtl,
+                                  style: TextStyle(
+                                    color: Color(0xFFB52D5E),
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
 
                       const SizedBox(height: 25),
 
-                      Text(
-                        voicePlaying
-                            ? 'استمعي... هذه الكلمات لكِ ❤️'
-                            : 'وهذه فقط البداية... ❤️',
+                      const Text(
+                        'وهذه فقط البداية... ❤️',
                         textAlign: TextAlign.center,
                         textDirection: TextDirection.rtl,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Color(0xFF9B6A7B),
                           fontSize: 14,
                         ),
@@ -638,16 +722,11 @@ class _CelebrationPageState extends State<CelebrationPage>
             ),
           ),
 
-          // زر الرجوع
           Positioned(
             top: 15,
             left: 10,
             child: IconButton(
-              onPressed: () async {
-                await birthdayPlayer.stop();
-
-                if (!context.mounted) return;
-
+              onPressed: () {
                 Navigator.pop(context);
               },
               icon: const Icon(
@@ -682,16 +761,13 @@ class BalloonPainter extends CustomPainter {
           20 + random.nextDouble() * (size.width - 40);
 
       final startY =
-          size.height +
-          random.nextDouble() * 300;
+          size.height + random.nextDouble() * 300;
 
-      final travel =
-          size.height + 400;
+      final travel = size.height + 400;
 
       final y =
           startY -
-          ((progress + i * 0.08) % 1.0) *
-              travel;
+          ((progress + i * 0.08) % 1.0) * travel;
 
       final radius =
           22 + random.nextDouble() * 10;
@@ -705,8 +781,8 @@ class BalloonPainter extends CustomPainter {
       ];
 
       final paint = Paint()
-        ..color = colors[i % colors.length]
-            .withOpacity(0.85);
+        ..color =
+            colors[i % colors.length].withOpacity(0.85);
 
       canvas.drawOval(
         Rect.fromCenter(
@@ -718,8 +794,8 @@ class BalloonPainter extends CustomPainter {
       );
 
       final stringPaint = Paint()
-        ..color = const Color(0xFF8C6573)
-            .withOpacity(0.45)
+        ..color =
+            const Color(0xFF8C6573).withOpacity(0.45)
         ..strokeWidth = 1;
 
       canvas.drawLine(
@@ -762,8 +838,7 @@ class ConfettiPainter extends CustomPainter {
     ];
 
     for (int i = 0; i < 70; i++) {
-      final x =
-          random.nextDouble() * size.width;
+      final x = random.nextDouble() * size.width;
 
       final baseY =
           random.nextDouble() * size.height;
@@ -782,8 +857,7 @@ class ConfettiPainter extends CustomPainter {
 
       final paint = Paint()
         ..color =
-            colors[i % colors.length]
-                .withOpacity(0.75);
+            colors[i % colors.length].withOpacity(0.75);
 
       canvas.save();
 
@@ -877,9 +951,7 @@ class TimeSeparator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: 4,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: 4),
       child: Text(
         ':',
         style: TextStyle(
