@@ -25,7 +25,7 @@ class BirthdayGiftApp extends StatelessWidget {
 }
 
 // ============================================================
-// شاشة القفل
+// شاشة البداية
 // ============================================================
 
 class LockPage extends StatefulWidget {
@@ -36,7 +36,8 @@ class LockPage extends StatefulWidget {
 }
 
 class _LockPageState extends State<LockPage> {
-  // للتجربة الآن: الهدية مفتوحة مباشرة
+  // للتجربة الآن — ستفتح الهدية مباشرة.
+  // لاحقًا نعيد التاريخ إلى 26 أغسطس 2026.
   final DateTime unlockTime = DateTime.now();
 
   Timer? timer;
@@ -112,22 +113,12 @@ class _LockPageState extends State<LockPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  AnimatedScale(
-                    scale: unlocked ? 1.15 : 1.0,
-                    duration: const Duration(milliseconds: 700),
-                    child: Icon(
-                      unlocked
-                          ? Icons.lock_open_rounded
-                          : Icons.lock_rounded,
-                      size: 100,
-                      color: const Color(0xFFFF719E),
-                      shadows: const [
-                        Shadow(
-                          color: Color(0x99FF719E),
-                          blurRadius: 30,
-                        ),
-                      ],
-                    ),
+                  Icon(
+                    unlocked
+                        ? Icons.lock_open_rounded
+                        : Icons.lock_rounded,
+                    size: 100,
+                    color: const Color(0xFFFF719E),
                   ),
 
                   const SizedBox(height: 35),
@@ -150,12 +141,11 @@ class _LockPageState extends State<LockPage> {
                   Text(
                     unlocked
                         ? 'حان وقت فتحها...'
-                        : 'لكنها مقفلة حتى 26 أغسطس الساعة 12:00 منتصف الليل',
+                        : 'انتظري قليلًا...',
                     textAlign: TextAlign.center,
                     textDirection: TextDirection.rtl,
                     style: const TextStyle(
                       fontSize: 17,
-                      height: 1.7,
                       color: Color(0xFFFFB8CD),
                     ),
                   ),
@@ -188,38 +178,26 @@ class _LockPageState extends State<LockPage> {
                       ],
                     ),
 
-                  if (!unlocked) ...[
-                    const SizedBox(height: 45),
-                    const Text(
-                      'اصبري قليلًا... هناك شيء جميل ينتظركِ 🌷',
-                      textAlign: TextAlign.center,
-                      textDirection: TextDirection.rtl,
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-
-                  if (unlocked) ...[
-                    const SizedBox(height: 40),
+                  if (unlocked)
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) => const CelebrationPage(),
+                            builder: (_) =>
+                                const CelebrationPage(),
                           ),
                         );
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF719E),
+                        backgroundColor:
+                            const Color(0xFFFF719E),
                         foregroundColor: Colors.white,
-                        minimumSize: const Size(220, 58),
-                        elevation: 12,
-                        shadowColor: const Color(0xFFFF719E),
+                        minimumSize:
+                            const Size(220, 58),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius:
+                              BorderRadius.circular(20),
                         ),
                       ),
                       child: const Text(
@@ -230,7 +208,6 @@ class _LockPageState extends State<LockPage> {
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ),
@@ -249,17 +226,20 @@ class CelebrationPage extends StatefulWidget {
   const CelebrationPage({super.key});
 
   @override
-  State<CelebrationPage> createState() => _CelebrationPageState();
+  State<CelebrationPage> createState() =>
+      _CelebrationPageState();
 }
 
-class _CelebrationPageState extends State<CelebrationPage>
+class _CelebrationPageState
+    extends State<CelebrationPage>
     with TickerProviderStateMixin {
   late AnimationController entranceController;
   late AnimationController balloonsController;
   late AnimationController confettiController;
   late AnimationController heartController;
 
-  final AudioPlayer birthdayPlayer = AudioPlayer();
+  final AudioPlayer birthdayPlayer =
+      AudioPlayer();
 
   @override
   void initState() {
@@ -267,7 +247,8 @@ class _CelebrationPageState extends State<CelebrationPage>
 
     entranceController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration:
+          const Duration(milliseconds: 1600),
     )..forward();
 
     balloonsController = AnimationController(
@@ -282,7 +263,8 @@ class _CelebrationPageState extends State<CelebrationPage>
 
     heartController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration:
+          const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
     _playBirthdaySong();
@@ -290,19 +272,26 @@ class _CelebrationPageState extends State<CelebrationPage>
 
   Future<void> _playBirthdaySong() async {
     try {
-      await birthdayPlayer.setReleaseMode(ReleaseMode.stop);
+      await birthdayPlayer.setReleaseMode(
+        ReleaseMode.stop,
+      );
+
       await birthdayPlayer.setVolume(0.75);
 
       await birthdayPlayer.play(
-        AssetSource('audio/happy_birthday.mp3'),
+        AssetSource(
+          'audio/happy_birthday.mp3',
+        ),
       );
     } catch (e) {
-      debugPrint('Birthday music error: $e');
+      debugPrint(
+        'Birthday music error: $e',
+      );
     }
   }
 
   Future<void> _openGift() async {
-    // إيقاف Happy Birthday فورًا
+    // إيقاف Happy Birthday قبل الانتقال.
     await birthdayPlayer.stop();
 
     if (!mounted) return;
@@ -310,9 +299,12 @@ class _CelebrationPageState extends State<CelebrationPage>
     Navigator.push(
       context,
       PageRouteBuilder(
-        transitionDuration: const Duration(milliseconds: 900),
-        pageBuilder: (_, animation, __) => const GiftPage(),
-        transitionsBuilder: (_, animation, __, child) {
+        transitionDuration:
+            const Duration(milliseconds: 900),
+        pageBuilder: (_, animation, __) =>
+            const GiftPage(),
+        transitionsBuilder:
+            (_, animation, __, child) {
           return FadeTransition(
             opacity: animation,
             child: child,
@@ -336,11 +328,13 @@ class _CelebrationPageState extends State<CelebrationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFE7EF),
+      backgroundColor:
+          const Color(0xFFFFE7EF),
       body: Stack(
         children: [
           Container(
-            decoration: const BoxDecoration(
+            decoration:
+                const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -355,11 +349,13 @@ class _CelebrationPageState extends State<CelebrationPage>
 
           Positioned.fill(
             child: AnimatedBuilder(
-              animation: confettiController,
+              animation:
+                  confettiController,
               builder: (_, __) {
                 return CustomPaint(
                   painter: ConfettiPainter(
-                    progress: confettiController.value,
+                    progress:
+                        confettiController.value,
                   ),
                 );
               },
@@ -368,11 +364,13 @@ class _CelebrationPageState extends State<CelebrationPage>
 
           Positioned.fill(
             child: AnimatedBuilder(
-              animation: balloonsController,
+              animation:
+                  balloonsController,
               builder: (_, __) {
                 return CustomPaint(
                   painter: BalloonPainter(
-                    progress: balloonsController.value,
+                    progress:
+                        balloonsController.value,
                   ),
                 );
               },
@@ -382,79 +380,112 @@ class _CelebrationPageState extends State<CelebrationPage>
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
+                padding:
+                    const EdgeInsets.symmetric(
                   horizontal: 25,
                   vertical: 35,
                 ),
                 child: FadeTransition(
                   opacity: CurvedAnimation(
-                    parent: entranceController,
+                    parent:
+                        entranceController,
                     curve: Curves.easeIn,
                   ),
                   child: Column(
                     children: [
-                      const SizedBox(height: 20),
-
                       const Text(
                         '🎉',
-                        style: TextStyle(fontSize: 60),
+                        style: TextStyle(
+                          fontSize: 60,
+                        ),
                       ),
 
-                      const SizedBox(height: 10),
+                      const SizedBox(
+                        height: 10,
+                      ),
 
                       const Text(
                         'كل عام وأنتِ بخير',
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.rtl,
+                        textAlign:
+                            TextAlign.center,
+                        textDirection:
+                            TextDirection.rtl,
                         style: TextStyle(
-                          color: Color(0xFF6B1738),
+                          color:
+                              Color(0xFF6B1738),
                           fontSize: 34,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(
+                        height: 8,
+                      ),
 
                       const Text(
                         'يا أجمل شخص دخل حياتي ❤️',
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.rtl,
+                        textAlign:
+                            TextAlign.center,
+                        textDirection:
+                            TextDirection.rtl,
                         style: TextStyle(
-                          color: Color(0xFFB52D5E),
+                          color:
+                              Color(0xFFB52D5E),
                           fontSize: 21,
-                          fontWeight: FontWeight.w600,
+                          fontWeight:
+                              FontWeight.w600,
                         ),
                       ),
 
-                      const SizedBox(height: 35),
+                      const SizedBox(
+                        height: 35,
+                      ),
 
                       AnimatedBuilder(
-                        animation: heartController,
+                        animation:
+                            heartController,
                         builder: (_, __) {
                           final scale =
-                              0.92 + heartController.value * 0.12;
+                              0.92 +
+                                  heartController
+                                          .value *
+                                      0.12;
 
                           return Transform.scale(
                             scale: scale,
                             child: Container(
                               width: 150,
                               height: 150,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.75),
-                                shape: BoxShape.circle,
+                              decoration:
+                                  BoxDecoration(
+                                color: Colors
+                                    .white
+                                    .withOpacity(
+                                  0.75,
+                                ),
+                                shape:
+                                    BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFFF719E)
-                                        .withOpacity(0.35),
+                                    color: const Color(
+                                      0xFFFF719E,
+                                    ).withOpacity(
+                                      0.35,
+                                    ),
                                     blurRadius: 35,
                                     spreadRadius: 5,
                                   ),
                                 ],
                               ),
-                              child: const Center(
+                              child:
+                                  const Center(
                                 child: Text(
                                   '🎂',
-                                  style: TextStyle(fontSize: 75),
+                                  style:
+                                      TextStyle(
+                                    fontSize: 75,
+                                  ),
                                 ),
                               ),
                             ),
@@ -462,43 +493,75 @@ class _CelebrationPageState extends State<CelebrationPage>
                         },
                       ),
 
-                      const SizedBox(height: 35),
+                      const SizedBox(
+                        height: 35,
+                      ),
 
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(25),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.72),
-                          borderRadius: BorderRadius.circular(28),
+                        width:
+                            double.infinity,
+                        padding:
+                            const EdgeInsets.all(
+                          25,
+                        ),
+                        decoration:
+                            BoxDecoration(
+                          color: Colors.white
+                              .withOpacity(
+                            0.72,
+                          ),
+                          borderRadius:
+                              BorderRadius.circular(
+                            28,
+                          ),
                           border: Border.all(
                             color: Colors.white,
                             width: 2,
                           ),
                         ),
-                        child: const Column(
+                        child:
+                            const Column(
                           children: [
                             Text(
                               '🎈  🎁  🎈',
-                              style: TextStyle(fontSize: 27),
-                            ),
-                            SizedBox(height: 18),
-                            Text(
-                              'اليوم مو يوم عادي...',
-                              textAlign: TextAlign.center,
-                              textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                color: Color(0xFF6B1738),
-                                fontSize: 21,
-                                fontWeight: FontWeight.bold,
+                              style:
+                                  TextStyle(
+                                fontSize: 27,
                               ),
                             ),
-                            SizedBox(height: 12),
+                            SizedBox(
+                              height: 18,
+                            ),
+                            Text(
+                              'اليوم مو يوم عادي...',
+                              textAlign:
+                                  TextAlign.center,
+                              textDirection:
+                                  TextDirection.rtl,
+                              style:
+                                  TextStyle(
+                                color: Color(
+                                  0xFF6B1738,
+                                ),
+                                fontSize: 21,
+                                fontWeight:
+                                    FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(
+                              height: 12,
+                            ),
                             Text(
                               'اليوم هو اليوم الذي وُلدت فيه إنسانة أصبحت غالية جدًا على قلبي ❤️',
-                              textAlign: TextAlign.center,
-                              textDirection: TextDirection.rtl,
-                              style: TextStyle(
-                                color: Color(0xFF7E5263),
+                              textAlign:
+                                  TextAlign.center,
+                              textDirection:
+                                  TextDirection.rtl,
+                              style:
+                                  TextStyle(
+                                color: Color(
+                                  0xFF7E5263,
+                                ),
                                 fontSize: 17,
                                 height: 1.8,
                               ),
@@ -507,50 +570,76 @@ class _CelebrationPageState extends State<CelebrationPage>
                         ),
                       ),
 
-                      const SizedBox(height: 35),
+                      const SizedBox(
+                        height: 35,
+                      ),
 
                       const Text(
-                        '🎉  HAPPY BIRTHDAY  🎉',
-                        textAlign: TextAlign.center,
+                        '🎉 HAPPY BIRTHDAY 🎉',
+                        textAlign:
+                            TextAlign.center,
                         style: TextStyle(
-                          color: Color(0xFFB52D5E),
+                          color:
+                              Color(0xFFB52D5E),
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          fontWeight:
+                              FontWeight.bold,
                           letterSpacing: 1.5,
                         ),
                       ),
 
-                      const SizedBox(height: 35),
+                      const SizedBox(
+                        height: 35,
+                      ),
 
                       ElevatedButton(
                         onPressed: _openGift,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFF719E),
-                          foregroundColor: Colors.white,
-                          minimumSize: const Size(230, 60),
+                        style:
+                            ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color(
+                            0xFFFF719E,
+                          ),
+                          foregroundColor:
+                              Colors.white,
+                          minimumSize:
+                              const Size(
+                            230,
+                            60,
+                          ),
                           elevation: 10,
-                          shadowColor: const Color(0xFFFF719E),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                          shape:
+                              RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(
+                              20,
+                            ),
                           ),
                         ),
                         child: const Text(
                           'الهدية 🎁',
-                          style: TextStyle(
+                          style:
+                              TextStyle(
                             fontSize: 19,
-                            fontWeight: FontWeight.bold,
+                            fontWeight:
+                                FontWeight.bold,
                           ),
                         ),
                       ),
 
-                      const SizedBox(height: 25),
+                      const SizedBox(
+                        height: 25,
+                      ),
 
                       const Text(
                         'وهذه فقط البداية... ❤️',
-                        textAlign: TextAlign.center,
-                        textDirection: TextDirection.rtl,
+                        textAlign:
+                            TextAlign.center,
+                        textDirection:
+                            TextDirection.rtl,
                         style: TextStyle(
-                          color: Color(0xFF9B6A7B),
+                          color:
+                              Color(0xFF9B6A7B),
                           fontSize: 14,
                         ),
                       ),
@@ -569,8 +658,10 @@ class _CelebrationPageState extends State<CelebrationPage>
                 Navigator.pop(context);
               },
               icon: const Icon(
-                Icons.arrow_back_ios_new_rounded,
-                color: Color(0xFF7B2748),
+                Icons
+                    .arrow_back_ios_new_rounded,
+                color:
+                    Color(0xFF7B2748),
               ),
             ),
           ),
@@ -588,18 +679,59 @@ class GiftPage extends StatefulWidget {
   const GiftPage({super.key});
 
   @override
-  State<GiftPage> createState() => _GiftPageState();
+  State<GiftPage> createState() =>
+      _GiftPageState();
 }
 
 class _GiftPageState extends State<GiftPage>
     with SingleTickerProviderStateMixin {
-  final AudioPlayer voicePlayer = AudioPlayer();
-  final AudioPlayer musicPlayer = AudioPlayer();
+  final AudioPlayer voicePlayer =
+      AudioPlayer();
+
+  final AudioPlayer musicPlayer =
+      AudioPlayer();
 
   late AnimationController giftController;
 
+  StreamSubscription<void>?
+      voiceCompleteSubscription;
+
   bool opening = false;
   bool voiceFinished = false;
+
+  // الرسالة التي ستظهر كلمة كلمة.
+  final String message = '''
+رهف ❤️
+
+بمناسبة أول عيد ميلاد لكِ وأنا معكِ، أريد أن أقدم لكِ هذه الكلمات النابعة من قلبي، وأقول لكِ أولًا:
+
+كل عام وأنتِ بخير يا أجمل ما حدث لي. ❤️
+
+أريد أن أقول لكِ شيئًا...
+
+أنا لا أحبكِ فقط، ولا أعشقكِ فقط، لأن المرحلة التي وصلت إليها في حبكِ فاقت كل هذه الكلمات.
+
+لقد أصبحتُ مدمنًا عليكِ، على وجودكِ، على صوتكِ، على تفاصيلكِ، وعلى كل شيء يخصكِ.
+
+أتدرين شيئًا؟
+
+حياتي من دونكِ تحتاج حياةً أخرى كي أصفها، لأن وجودكِ فيها أصبح شيئًا لا أستطيع تخيله بعيدًا عني.
+
+وأتمنى من كل قلبي أن يأتي يوم أستطيع فيه أن أقول إنكِ أصبحتِ زوجتي، وأن تكوني لي ومن نصيبي، وأن نكمل حياتنا معًا. ❤️
+
+لا أعرف ماذا سيحمل لنا المستقبل، لكنني أعرف شيئًا واحدًا...
+
+أنني أحبكِ.
+
+أحبكِ أكثر مما تستطيع هذه الكلمات أن تصف. ❤️
+
+وكل عام وأنتِ معي، وكل عام وأنتِ أقرب إنسانة إلى قلبي.
+
+أحبكِ يا رهف. ❤️
+''';
+
+  List<String> displayedWords = [];
+  Timer? typingTimer;
 
   @override
   void initState() {
@@ -607,12 +739,16 @@ class _GiftPageState extends State<GiftPage>
 
     giftController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration:
+          const Duration(milliseconds: 800),
     );
 
-    voicePlayer.onPlayerComplete.listen((_) {
-      _playCalmMusic();
-    });
+    voiceCompleteSubscription =
+        voicePlayer.onPlayerComplete.listen(
+      (_) {
+        _playGoldenBrown();
+      },
+    );
   }
 
   Future<void> _openBox() async {
@@ -629,21 +765,27 @@ class _GiftPageState extends State<GiftPage>
 
   Future<void> _playVoice() async {
     try {
-      await voicePlayer.setReleaseMode(ReleaseMode.stop);
+      await voicePlayer.setReleaseMode(
+        ReleaseMode.stop,
+      );
+
       await voicePlayer.setVolume(1.0);
 
       await voicePlayer.play(
-        AssetSource('audio/voice_message.mp3'),
+        AssetSource(
+          'audio/voice_message.mp3',
+        ),
       );
     } catch (e) {
-      debugPrint('Voice error: $e');
+      debugPrint(
+        'Voice error: $e',
+      );
 
-      // إذا لم يعمل التسجيل، ننتقل للموسيقى
-      await _playCalmMusic();
+      await _playGoldenBrown();
     }
   }
 
-  Future<void> _playCalmMusic() async {
+  Future<void> _playGoldenBrown() async {
     if (!mounted) return;
 
     setState(() {
@@ -651,7 +793,10 @@ class _GiftPageState extends State<GiftPage>
     });
 
     try {
-      await musicPlayer.setReleaseMode(ReleaseMode.loop);
+      await musicPlayer.setReleaseMode(
+        ReleaseMode.loop,
+      );
+
       await musicPlayer.setVolume(0.45);
 
       await musicPlayer.play(
@@ -660,12 +805,56 @@ class _GiftPageState extends State<GiftPage>
         ),
       );
     } catch (e) {
-      debugPrint('Calm music error: $e');
+      debugPrint(
+        'Golden Brown error: $e',
+      );
     }
+
+    _startTyping();
+  }
+
+  void _startTyping() {
+    typingTimer?.cancel();
+
+    final words = message
+        .replaceAll('\n', ' \n ')
+        .split(RegExp(r'\s+'))
+        .where((word) => word.isNotEmpty)
+        .toList();
+
+    displayedWords = [];
+
+    int index = 0;
+
+    typingTimer = Timer.periodic(
+      const Duration(milliseconds: 230),
+      (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
+
+        if (index >= words.length) {
+          timer.cancel();
+          return;
+        }
+
+        setState(() {
+          displayedWords.add(
+            words[index],
+          );
+        });
+
+        index++;
+      },
+    );
   }
 
   @override
   void dispose() {
+    typingTimer?.cancel();
+    voiceCompleteSubscription?.cancel();
+
     giftController.dispose();
     voicePlayer.dispose();
     musicPlayer.dispose();
@@ -677,7 +866,8 @@ class _GiftPageState extends State<GiftPage>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration:
+            const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
@@ -691,205 +881,300 @@ class _GiftPageState extends State<GiftPage>
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(25),
+              padding:
+                  const EdgeInsets.all(25),
               child: Column(
                 children: [
                   const Text(
                     '🎁',
-                    style: TextStyle(fontSize: 32),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  Text(
-                    voiceFinished
-                        ? 'والآن... اسمعي ما بداخلي ❤️'
-                        : 'هذه الهدية لكِ وحدكِ',
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                    style: const TextStyle(
-                      color: Color(0xFF6B1738),
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+                    style: TextStyle(
+                      fontSize: 32,
                     ),
                   ),
 
-                  const SizedBox(height: 15),
+                  const SizedBox(
+                    height: 15,
+                  ),
 
                   Text(
                     voiceFinished
-                        ? 'هناك أشياء يصعب قولها...'
-                        : 'اضغطي على العلبة عندما تكونين مستعدة 🎀',
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
+                        ? 'من قلبي إليكِ ❤️'
+                        : 'هذه الهدية لكِ وحدكِ',
+                    textAlign:
+                        TextAlign.center,
+                    textDirection:
+                        TextDirection.rtl,
                     style: const TextStyle(
-                      color: Color(0xFF9B5A70),
+                      color:
+                          Color(0xFF6B1738),
+                      fontSize: 28,
+                      fontWeight:
+                          FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(
+                    height: 15,
+                  ),
+
+                  Text(
+                    voiceFinished
+                        ? 'اقرئيها بهدوء... ❤️'
+                        : 'اضغطي على العلبة عندما تكونين مستعدة 🎀',
+                    textAlign:
+                        TextAlign.center,
+                    textDirection:
+                        TextDirection.rtl,
+                    style: const TextStyle(
+                      color:
+                          Color(0xFF9B5A70),
                       fontSize: 17,
                     ),
                   ),
 
-                  const SizedBox(height: 55),
+                  const SizedBox(
+                    height: 45,
+                  ),
 
-                  GestureDetector(
-                    onTap: _openBox,
-                    child: AnimatedBuilder(
-                      animation: giftController,
-                      builder: (_, __) {
-                        final scale =
-                            1.0 + giftController.value * 0.12;
+                  if (!voiceFinished)
+                    GestureDetector(
+                      onTap: _openBox,
+                      child:
+                          AnimatedBuilder(
+                        animation:
+                            giftController,
+                        builder: (_, __) {
+                          final scale =
+                              1.0 +
+                                  giftController
+                                          .value *
+                                      0.12;
 
-                        return Transform.scale(
-                          scale: scale,
-                          child: Container(
-                            width: 230,
-                            height: 230,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.75),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFFF719E)
-                                      .withOpacity(0.30),
-                                  blurRadius: 40,
-                                  spreadRadius: 8,
+                          return Transform.scale(
+                            scale: scale,
+                            child:
+                                Container(
+                              width: 230,
+                              height: 230,
+                              decoration:
+                                  BoxDecoration(
+                                color: Colors
+                                    .white
+                                    .withOpacity(
+                                  0.75,
                                 ),
-                              ],
-                            ),
-                            child: Center(
-                              child: AnimatedSwitcher(
-                                duration:
-                                    const Duration(milliseconds: 500),
-                                child: Text(
-                                  opening ? '🎀✨' : '🎁',
-                                  key: ValueKey(opening),
-                                  style: const TextStyle(
-                                    fontSize: 110,
+                                shape:
+                                    BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        const Color(
+                                      0xFFFF719E,
+                                    ).withOpacity(
+                                      0.30,
+                                    ),
+                                    blurRadius:
+                                        40,
+                                    spreadRadius:
+                                        8,
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child:
+                                    AnimatedSwitcher(
+                                  duration:
+                                      const Duration(
+                                    milliseconds:
+                                        500,
+                                  ),
+                                  child: Text(
+                                    opening
+                                        ? '🎀✨'
+                                        : '🎁',
+                                    key: ValueKey(
+                                      opening,
+                                    ),
+                                    style:
+                                        const TextStyle(
+                                      fontSize:
+                                          110,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 45),
-
-                  if (!opening)
-                    const Text(
-                      'اضغطي على الهدية 🎁',
-                      textAlign: TextAlign.center,
-                      textDirection: TextDirection.rtl,
-                      style: TextStyle(
-                        color: Color(0xFFB52D5E),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                          );
+                        },
                       ),
                     ),
 
-                  if (opening && !voiceFinished)
-                    const Column(
-                      children: [
-                        SizedBox(height: 20),
-                        CircularProgressIndicator(
-                          color: Color(0xFFFF719E),
+                  if (!opening &&
+                      !voiceFinished)
+                    const Padding(
+                      padding:
+                          EdgeInsets.only(
+                        top: 35,
+                      ),
+                      child: Text(
+                        'اضغطي على الهدية 🎁',
+                        textAlign:
+                            TextAlign.center,
+                        textDirection:
+                            TextDirection.rtl,
+                        style:
+                            TextStyle(
+                          color:
+                              Color(0xFFB52D5E),
+                          fontSize: 18,
+                          fontWeight:
+                              FontWeight.bold,
                         ),
-                        SizedBox(height: 15),
-                        Text(
-                          'استمعي... ❤️',
-                          textAlign: TextAlign.center,
-                          textDirection: TextDirection.rtl,
-                          style: TextStyle(
-                            color: Color(0xFFB52D5E),
-                            fontSize: 18,
+                      ),
+                    ),
+
+                  if (opening &&
+                      !voiceFinished)
+                    const Padding(
+                      padding:
+                          EdgeInsets.only(
+                        top: 35,
+                      ),
+                      child: Column(
+                        children: [
+                          CircularProgressIndicator(
+                            color:
+                                Color(0xFFFF719E),
                           ),
-                        ),
-                      ],
+                          SizedBox(
+                            height: 15,
+                          ),
+                          Text(
+                            'استمعي... ❤️',
+                            textAlign:
+                                TextAlign.center,
+                            textDirection:
+                                TextDirection.rtl,
+                            style:
+                                TextStyle(
+                              color:
+                                  Color(0xFFB52D5E),
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
 
                   if (voiceFinished) ...[
-                    const SizedBox(height: 25),
+                    const SizedBox(
+                      height: 25,
+                    ),
 
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(25),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.82),
-                        borderRadius: BorderRadius.circular(28),
+                      width:
+                          double.infinity,
+                      padding:
+                          const EdgeInsets.all(
+                        25,
+                      ),
+                      decoration:
+                          BoxDecoration(
+                        color: Colors.white
+                            .withOpacity(
+                          0.82,
+                        ),
+                        borderRadius:
+                            BorderRadius.circular(
+                          28,
+                        ),
                         border: Border.all(
                           color: Colors.white,
                           width: 2,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFB52D5E)
-                                .withOpacity(0.12),
+                            color:
+                                const Color(
+                              0xFFB52D5E,
+                            ).withOpacity(
+                              0.12,
+                            ),
                             blurRadius: 25,
-                            offset: const Offset(0, 10),
+                            offset:
+                                const Offset(
+                              0,
+                              10,
+                            ),
                           ),
                         ],
                       ),
-                      child: const Column(
-                        children: [
-                          Text(
-                            '❤️',
-                            style: TextStyle(fontSize: 45),
+                      child: Directionality(
+                        textDirection:
+                            TextDirection.rtl,
+                        child: Text.rich(
+                          TextSpan(
+                            children: [
+                              for (
+                                int i = 0;
+                                i <
+                                    displayedWords
+                                        .length;
+                                i++
+                              )
+                                TextSpan(
+                                  text:
+                                      '${displayedWords[i]} ',
+                                  style:
+                                      const TextStyle(
+                                    color:
+                                        Color(
+                                      0xFF6B1738,
+                                    ),
+                                    fontSize:
+                                        19,
+                                    height:
+                                        2.0,
+                                  ),
+                                ),
+                            ],
                           ),
-
-                          SizedBox(height: 15),
-
-                          Text(
-                            'إلى الإنسانة التي أحبها...',
-                            textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              color: Color(0xFF6B1738),
-                              fontSize: 23,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-
-                          SizedBox(height: 20),
-
-                          Text(
-                            'أحيانًا الكلام لا يكفي لأشرح لكِ كم أنتِ مهمة بالنسبة لي.\n\nوجودك في حياتي جعل أشياء كثيرة تبدو أجمل، وأيامًا كثيرة أصبحت تستحق أن أتذكرها.\n\nفي يوم ميلادك أتمنى أن تكون كل أيامك القادمة مليئة بالفرح، وأن تظلي دائمًا تلك الابتسامة الجميلة التي أحبها.\n\nكل عام وأنتِ بخير يا أجمل هدية دخلت حياتي. ❤️',
-                            textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              color: Color(0xFF7E5263),
-                              fontSize: 18,
-                              height: 2,
-                            ),
-                          ),
-
-                          SizedBox(height: 20),
-
-                          Text(
-                            'أحبكِ ❤️',
-                            textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
-                            style: TextStyle(
-                              color: Color(0xFFB52D5E),
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                          textAlign:
+                              TextAlign.center,
+                        ),
                       ),
                     ),
                   ],
 
-                  const SizedBox(height: 40),
+                  const SizedBox(
+                    height: 35,
+                  ),
+
+                  if (voiceFinished)
+                    const Text(
+                      '❤️',
+                      style:
+                          TextStyle(
+                        fontSize: 35,
+                      ),
+                    ),
+
+                  const SizedBox(
+                    height: 20,
+                  ),
 
                   TextButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.pop(
+                        context,
+                      );
                     },
                     child: const Text(
                       'رجوع',
-                      style: TextStyle(
-                        color: Color(0xFF9B5A70),
+                      style:
+                          TextStyle(
+                        color:
+                            Color(0xFF9B5A70),
                       ),
                     ),
                   ),
@@ -904,10 +1189,11 @@ class _GiftPageState extends State<GiftPage>
 }
 
 // ============================================================
-// البالونات
+// رسم البالونات
 // ============================================================
 
-class BalloonPainter extends CustomPainter {
+class BalloonPainter
+    extends CustomPainter {
   final double progress;
 
   BalloonPainter({
@@ -915,24 +1201,34 @@ class BalloonPainter extends CustomPainter {
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
+  void paint(
+    Canvas canvas,
+    Size size,
+  ) {
     final random = Random(42);
 
     for (int i = 0; i < 12; i++) {
-      final x =
-          20 + random.nextDouble() * (size.width - 40);
+      final x = 20 +
+          random.nextDouble() *
+              (size.width - 40);
 
       final startY =
-          size.height + random.nextDouble() * 300;
+          size.height +
+              random.nextDouble() *
+                  300;
 
-      final travel = size.height + 400;
+      final travel =
+          size.height + 400;
 
-      final y =
-          startY -
-          ((progress + i * 0.08) % 1.0) * travel;
+      final y = startY -
+          ((progress + i * 0.08) %
+                  1.0) *
+              travel;
 
       final radius =
-          22 + random.nextDouble() * 10;
+          22 +
+              random.nextDouble() *
+                  10;
 
       final colors = [
         const Color(0xFFFF719E),
@@ -944,7 +1240,8 @@ class BalloonPainter extends CustomPainter {
 
       final paint = Paint()
         ..color =
-            colors[i % colors.length].withOpacity(0.85);
+            colors[i % colors.length]
+                .withOpacity(0.85);
 
       canvas.drawOval(
         Rect.fromCenter(
@@ -955,14 +1252,23 @@ class BalloonPainter extends CustomPainter {
         paint,
       );
 
-      final stringPaint = Paint()
-        ..color =
-            const Color(0xFF8C6573).withOpacity(0.45)
-        ..strokeWidth = 1;
+      final stringPaint =
+          Paint()
+            ..color =
+                const Color(
+              0xFF8C6573,
+            ).withOpacity(0.45)
+            ..strokeWidth = 1;
 
       canvas.drawLine(
-        Offset(x, y + radius * 0.9),
-        Offset(x, y + radius * 3.5),
+        Offset(
+          x,
+          y + radius * 0.9,
+        ),
+        Offset(
+          x,
+          y + radius * 3.5,
+        ),
         stringPaint,
       );
     }
@@ -970,17 +1276,20 @@ class BalloonPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(
-    covariant BalloonPainter oldDelegate,
+    covariant BalloonPainter
+        oldDelegate,
   ) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress !=
+        progress;
   }
 }
 
 // ============================================================
-// الكونفيتي
+// رسم الكونفيتي
 // ============================================================
 
-class ConfettiPainter extends CustomPainter {
+class ConfettiPainter
+    extends CustomPainter {
   final double progress;
 
   ConfettiPainter({
@@ -988,7 +1297,10 @@ class ConfettiPainter extends CustomPainter {
   });
 
   @override
-  void paint(Canvas canvas, Size size) {
+  void paint(
+    Canvas canvas,
+    Size size,
+  ) {
     final random = Random(91);
 
     final colors = [
@@ -1000,27 +1312,43 @@ class ConfettiPainter extends CustomPainter {
     ];
 
     for (int i = 0; i < 70; i++) {
-      final x = random.nextDouble() * size.width;
+      final x =
+          random.nextDouble() *
+              size.width;
 
       final baseY =
-          random.nextDouble() * size.height;
+          random.nextDouble() *
+              size.height;
 
       final falling =
           (baseY +
-                  progress * size.height * 1.4 +
+                  progress *
+                      size.height *
+                      1.4 +
                   i * 13) %
               size.height;
 
-      final w = 3 + random.nextDouble() * 5;
-      final h = 6 + random.nextDouble() * 10;
+      final w =
+          3 +
+              random.nextDouble() *
+                  5;
+
+      final h =
+          6 +
+              random.nextDouble() *
+                  10;
 
       final paint = Paint()
         ..color =
-            colors[i % colors.length].withOpacity(0.75);
+            colors[i % colors.length]
+                .withOpacity(0.75);
 
       canvas.save();
 
-      canvas.translate(x, falling);
+      canvas.translate(
+        x,
+        falling,
+      );
 
       canvas.rotate(
         progress * pi * 2 + i,
@@ -1041,9 +1369,11 @@ class ConfettiPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(
-    covariant ConfettiPainter oldDelegate,
+    covariant ConfettiPainter
+        oldDelegate,
   ) {
-    return oldDelegate.progress != progress;
+    return oldDelegate.progress !=
+        progress;
   }
 }
 
@@ -1051,7 +1381,8 @@ class ConfettiPainter extends CustomPainter {
 // مربعات الوقت
 // ============================================================
 
-class TimeBox extends StatelessWidget {
+class TimeBox
+    extends StatelessWidget {
   final String value;
   final String label;
 
@@ -1062,34 +1393,53 @@ class TimeBox extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return Container(
       width: 62,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
+      padding:
+          const EdgeInsets.symmetric(
+        vertical: 12,
+      ),
+      decoration:
+          BoxDecoration(
+        color: Colors.white
+            .withOpacity(0.08),
+        borderRadius:
+            BorderRadius.circular(
+          16,
+        ),
         border: Border.all(
           color:
-              const Color(0xFFFF719E).withOpacity(0.3),
+              const Color(
+            0xFFFF719E,
+          ).withOpacity(0.3),
         ),
       ),
       child: Column(
         children: [
           Text(
             value,
-            style: const TextStyle(
+            style:
+                const TextStyle(
               fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              fontWeight:
+                  FontWeight.bold,
+              color:
+                  Colors.white,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(
+            height: 4,
+          ),
           Text(
             label,
-            style: const TextStyle(
+            style:
+                const TextStyle(
               fontSize: 11,
-              color: Color(0xFFFFB8CD),
+              color:
+                  Color(0xFFFFB8CD),
             ),
           ),
         ],
@@ -1102,19 +1452,29 @@ class TimeBox extends StatelessWidget {
 // فاصل الوقت
 // ============================================================
 
-class TimeSeparator extends StatelessWidget {
-  const TimeSeparator({super.key});
+class TimeSeparator
+    extends StatelessWidget {
+  const TimeSeparator({
+    super.key,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(
+    BuildContext context,
+  ) {
     return const Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4),
+      padding:
+          EdgeInsets.symmetric(
+        horizontal: 4,
+      ),
       child: Text(
         ':',
         style: TextStyle(
           fontSize: 22,
-          color: Color(0xFFFF719E),
-          fontWeight: FontWeight.bold,
+          color:
+              Color(0xFFFF719E),
+          fontWeight:
+              FontWeight.bold,
         ),
       ),
     );
