@@ -37,7 +37,7 @@ class LockPage extends StatefulWidget {
 
 class _LockPageState extends State<LockPage> {
   // تفتح الهدية عند بداية يوم 26 أغسطس 2026
-  final DateTime unlockTime = DateTime(2026, 8, 26, 0, 0);
+ final DateTime unlockTime = DateTime.now();
 
   Timer? timer;
   Duration remaining = Duration.zero;
