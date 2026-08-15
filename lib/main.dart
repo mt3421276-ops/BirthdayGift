@@ -25,7 +25,7 @@ class BirthdayGiftApp extends StatelessWidget {
 }
 
 // ============================================================
-// شاشة القفل والعد التنازلي
+// شاشة القفل
 // ============================================================
 
 class LockPage extends StatefulWidget {
@@ -36,8 +36,8 @@ class LockPage extends StatefulWidget {
 }
 
 class _LockPageState extends State<LockPage> {
-  // تفتح الهدية عند بداية يوم 26 أغسطس 2026
- final DateTime unlockTime = DateTime.now();
+  // للتجربة الآن: الهدية مفتوحة مباشرة
+  final DateTime unlockTime = DateTime.now();
 
   Timer? timer;
   Duration remaining = Duration.zero;
@@ -45,7 +45,6 @@ class _LockPageState extends State<LockPage> {
   @override
   void initState() {
     super.initState();
-
     updateTimer();
 
     timer = Timer.periodic(
@@ -208,18 +207,8 @@ class _LockPageState extends State<LockPage> {
                       onPressed: () {
                         Navigator.push(
                           context,
-                          PageRouteBuilder(
-                            transitionDuration:
-                                const Duration(milliseconds: 900),
-                            pageBuilder: (_, animation, __) =>
-                                const CelebrationPage(),
-                            transitionsBuilder:
-                                (_, animation, __, child) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: child,
-                              );
-                            },
+                          MaterialPageRoute(
+                            builder: (_) => const CelebrationPage(),
                           ),
                         );
                       },
@@ -271,12 +260,6 @@ class _CelebrationPageState extends State<CelebrationPage>
   late AnimationController heartController;
 
   final AudioPlayer birthdayPlayer = AudioPlayer();
-  final AudioPlayer voicePlayer = AudioPlayer();
-  final AudioPlayer calmPlayer = AudioPlayer();
-
-  bool voiceStarted = false;
-  bool calmMusicStarted = false;
-  bool showMessage = false;
 
   @override
   void initState() {
@@ -318,67 +301,25 @@ class _CelebrationPageState extends State<CelebrationPage>
     }
   }
 
-  // ==========================================================
-  // زر الهدية:
-  // Happy Birthday تتوقف
-  // ثم يبدأ التسجيل الصوتي
-  // ==========================================================
+  Future<void> _openGift() async {
+    // إيقاف Happy Birthday فورًا
+    await birthdayPlayer.stop();
 
-  Future<void> _startVoiceMessage() async {
-    if (voiceStarted) return;
+    if (!mounted) return;
 
-    voiceStarted = true;
-
-    try {
-      // إيقاف أغنية عيد الميلاد
-      await birthdayPlayer.stop();
-
-      // تشغيل التسجيل
-      await voicePlayer.setReleaseMode(ReleaseMode.stop);
-      await voicePlayer.setVolume(1.0);
-
-      await voicePlayer.play(
-        AssetSource('audio/voice_message.mp3'),
-      );
-
-      // عندما ينتهي التسجيل
-      voicePlayer.onPlayerComplete.listen((event) {
-        _startCalmMusic();
-      });
-    } catch (e) {
-      debugPrint('Voice message error: $e');
-    }
-  }
-
-  // ==========================================================
-  // بعد انتهاء التسجيل تبدأ الموسيقى الهادئة
-  // ==========================================================
-
-  Future<void> _startCalmMusic() async {
-    if (calmMusicStarted) return;
-
-    calmMusicStarted = true;
-
-    try {
-      await voicePlayer.stop();
-
-      await calmPlayer.setReleaseMode(ReleaseMode.loop);
-      await calmPlayer.setVolume(0.35);
-
-      await calmPlayer.play(
-        AssetSource(
-          'audio/dopuu_aurelia_EDMUNDS_-_Golden_Brown_-_Slowed_Loop_(mp3.pm).mp3',
-        ),
-      );
-
-      if (mounted) {
-        setState(() {
-          showMessage = true;
-        });
-      }
-    } catch (e) {
-      debugPrint('Calm music error: $e');
-    }
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 900),
+        pageBuilder: (_, animation, __) => const GiftPage(),
+        transitionsBuilder: (_, animation, __, child) {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        },
+      ),
+    );
   }
 
   @override
@@ -387,10 +328,7 @@ class _CelebrationPageState extends State<CelebrationPage>
     balloonsController.dispose();
     confettiController.dispose();
     heartController.dispose();
-
     birthdayPlayer.dispose();
-    voicePlayer.dispose();
-    calmPlayer.dispose();
 
     super.dispose();
   }
@@ -454,7 +392,6 @@ class _CelebrationPageState extends State<CelebrationPage>
                     curve: Curves.easeIn,
                   ),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 20),
 
@@ -473,7 +410,6 @@ class _CelebrationPageState extends State<CelebrationPage>
                           color: Color(0xFF6B1738),
                           fontSize: 34,
                           fontWeight: FontWeight.bold,
-                          height: 1.3,
                         ),
                       ),
 
@@ -538,25 +474,14 @@ class _CelebrationPageState extends State<CelebrationPage>
                             color: Colors.white,
                             width: 2,
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFB52D5E)
-                                  .withOpacity(0.12),
-                              blurRadius: 25,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
                         ),
                         child: const Column(
                           children: [
                             Text(
                               '🎈  🎁  🎈',
-                              textAlign: TextAlign.center,
                               style: TextStyle(fontSize: 27),
                             ),
-
                             SizedBox(height: 18),
-
                             Text(
                               'اليوم مو يوم عادي...',
                               textAlign: TextAlign.center,
@@ -567,9 +492,7 @@ class _CelebrationPageState extends State<CelebrationPage>
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-
                             SizedBox(height: 12),
-
                             Text(
                               'اليوم هو اليوم الذي وُلدت فيه إنسانة أصبحت غالية جدًا على قلبي ❤️',
                               textAlign: TextAlign.center,
@@ -599,110 +522,26 @@ class _CelebrationPageState extends State<CelebrationPage>
 
                       const SizedBox(height: 35),
 
-                      if (!showMessage)
-                        ElevatedButton(
-                          onPressed: _startVoiceMessage,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color(0xFFFF719E),
-                            foregroundColor: Colors.white,
-                            minimumSize: const Size(230, 60),
-                            elevation: 10,
-                            shadowColor:
-                                const Color(0xFFFF719E),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(20),
-                            ),
-                          ),
-                          child: Text(
-                            voiceStarted
-                                ? 'استمعي... 🎙️'
-                                : 'الهدية 🎁',
-                            style: const TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      ElevatedButton(
+                        onPressed: _openGift,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFF719E),
+                          foregroundColor: Colors.white,
+                          minimumSize: const Size(230, 60),
+                          elevation: 10,
+                          shadowColor: const Color(0xFFFF719E),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
                           ),
                         ),
-
-                      if (showMessage)
-                        AnimatedOpacity(
-                          opacity: showMessage ? 1.0 : 0.0,
-                          duration:
-                              const Duration(milliseconds: 1200),
-                          child: Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(25),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.88),
-                              borderRadius:
-                                  BorderRadius.circular(28),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFB52D5E)
-                                      .withOpacity(0.15),
-                                  blurRadius: 25,
-                                  offset: const Offset(0, 10),
-                                ),
-                              ],
-                            ),
-                            child: const Column(
-                              children: [
-                                Text(
-                                  '❤️',
-                                  style: TextStyle(fontSize: 50),
-                                ),
-
-                                SizedBox(height: 15),
-
-                                Text(
-                                  'إلى أجمل إنسانة في حياتي...',
-                                  textAlign: TextAlign.center,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    color: Color(0xFF6B1738),
-                                    fontSize: 23,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                SizedBox(height: 20),
-
-                                Text(
-                                  'كل عام وأنتِ بخير يا حبيبتي ❤️\n\n'
-                                  'أتمنى أن تكون هذه السنة أجمل سنة مرت عليكِ، '
-                                  'وأن تكون كل أيامك مليئة بالفرح والضحكة والسعادة.\n\n'
-                                  'يمكن تكون هذه مجرد هدية صغيرة، '
-                                  'لكن كل تفصيل فيها معمول من قلبي عشانكِ.\n\n'
-                                  'وجودك في حياتي شيء أنا ممتن له جدًا، '
-                                  'وأتمنى أن أقدر دائمًا أشوفك سعيدة.\n\n'
-                                  'عيد ميلاد سعيد يا أجمل هدية ❤️',
-                                  textAlign: TextAlign.center,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    color: Color(0xFF7E5263),
-                                    fontSize: 17,
-                                    height: 2.0,
-                                  ),
-                                ),
-
-                                SizedBox(height: 20),
-
-                                Text(
-                                  'أحبكِ ❤️',
-                                  textAlign: TextAlign.center,
-                                  textDirection: TextDirection.rtl,
-                                  style: TextStyle(
-                                    color: Color(0xFFB52D5E),
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        child: const Text(
+                          'الهدية 🎁',
+                          style: TextStyle(
+                            fontSize: 19,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
+                      ),
 
                       const SizedBox(height: 25),
 
@@ -742,7 +581,330 @@ class _CelebrationPageState extends State<CelebrationPage>
 }
 
 // ============================================================
-// رسم البالونات
+// صفحة الهدية
+// ============================================================
+
+class GiftPage extends StatefulWidget {
+  const GiftPage({super.key});
+
+  @override
+  State<GiftPage> createState() => _GiftPageState();
+}
+
+class _GiftPageState extends State<GiftPage>
+    with SingleTickerProviderStateMixin {
+  final AudioPlayer voicePlayer = AudioPlayer();
+  final AudioPlayer musicPlayer = AudioPlayer();
+
+  late AnimationController giftController;
+
+  bool opening = false;
+  bool voiceFinished = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    giftController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    voicePlayer.onPlayerComplete.listen((_) {
+      _playCalmMusic();
+    });
+  }
+
+  Future<void> _openBox() async {
+    if (opening) return;
+
+    setState(() {
+      opening = true;
+    });
+
+    await giftController.forward();
+
+    await _playVoice();
+  }
+
+  Future<void> _playVoice() async {
+    try {
+      await voicePlayer.setReleaseMode(ReleaseMode.stop);
+      await voicePlayer.setVolume(1.0);
+
+      await voicePlayer.play(
+        AssetSource('audio/voice_message.mp3'),
+      );
+    } catch (e) {
+      debugPrint('Voice error: $e');
+
+      // إذا لم يعمل التسجيل، ننتقل للموسيقى
+      await _playCalmMusic();
+    }
+  }
+
+  Future<void> _playCalmMusic() async {
+    if (!mounted) return;
+
+    setState(() {
+      voiceFinished = true;
+    });
+
+    try {
+      await musicPlayer.setReleaseMode(ReleaseMode.loop);
+      await musicPlayer.setVolume(0.45);
+
+      await musicPlayer.play(
+        AssetSource(
+          'audio/dopuu_aurelia_EDMUNDS_-_Golden_Brown_-_Slowed_Loop_(mp3.pm).mp3',
+        ),
+      );
+    } catch (e) {
+      debugPrint('Calm music error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    giftController.dispose();
+    voicePlayer.dispose();
+    musicPlayer.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFFFE4ED),
+              Color(0xFFFFF5F8),
+              Color(0xFFFFD4E2),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(25),
+              child: Column(
+                children: [
+                  const Text(
+                    '🎁',
+                    style: TextStyle(fontSize: 32),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    voiceFinished
+                        ? 'والآن... اسمعي ما بداخلي ❤️'
+                        : 'هذه الهدية لكِ وحدكِ',
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.rtl,
+                    style: const TextStyle(
+                      color: Color(0xFF6B1738),
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  Text(
+                    voiceFinished
+                        ? 'هناك أشياء يصعب قولها...'
+                        : 'اضغطي على العلبة عندما تكونين مستعدة 🎀',
+                    textAlign: TextAlign.center,
+                    textDirection: TextDirection.rtl,
+                    style: const TextStyle(
+                      color: Color(0xFF9B5A70),
+                      fontSize: 17,
+                    ),
+                  ),
+
+                  const SizedBox(height: 55),
+
+                  GestureDetector(
+                    onTap: _openBox,
+                    child: AnimatedBuilder(
+                      animation: giftController,
+                      builder: (_, __) {
+                        final scale =
+                            1.0 + giftController.value * 0.12;
+
+                        return Transform.scale(
+                          scale: scale,
+                          child: Container(
+                            width: 230,
+                            height: 230,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.75),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF719E)
+                                      .withOpacity(0.30),
+                                  blurRadius: 40,
+                                  spreadRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: AnimatedSwitcher(
+                                duration:
+                                    const Duration(milliseconds: 500),
+                                child: Text(
+                                  opening ? '🎀✨' : '🎁',
+                                  key: ValueKey(opening),
+                                  style: const TextStyle(
+                                    fontSize: 110,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 45),
+
+                  if (!opening)
+                    const Text(
+                      'اضغطي على الهدية 🎁',
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.rtl,
+                      style: TextStyle(
+                        color: Color(0xFFB52D5E),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                  if (opening && !voiceFinished)
+                    const Column(
+                      children: [
+                        SizedBox(height: 20),
+                        CircularProgressIndicator(
+                          color: Color(0xFFFF719E),
+                        ),
+                        SizedBox(height: 15),
+                        Text(
+                          'استمعي... ❤️',
+                          textAlign: TextAlign.center,
+                          textDirection: TextDirection.rtl,
+                          style: TextStyle(
+                            color: Color(0xFFB52D5E),
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  if (voiceFinished) ...[
+                    const SizedBox(height: 25),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(25),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.82),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: Colors.white,
+                          width: 2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFB52D5E)
+                                .withOpacity(0.12),
+                            blurRadius: 25,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: const Column(
+                        children: [
+                          Text(
+                            '❤️',
+                            style: TextStyle(fontSize: 45),
+                          ),
+
+                          SizedBox(height: 15),
+
+                          Text(
+                            'إلى الإنسانة التي أحبها...',
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                              color: Color(0xFF6B1738),
+                              fontSize: 23,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          Text(
+                            'أحيانًا الكلام لا يكفي لأشرح لكِ كم أنتِ مهمة بالنسبة لي.\n\nوجودك في حياتي جعل أشياء كثيرة تبدو أجمل، وأيامًا كثيرة أصبحت تستحق أن أتذكرها.\n\nفي يوم ميلادك أتمنى أن تكون كل أيامك القادمة مليئة بالفرح، وأن تظلي دائمًا تلك الابتسامة الجميلة التي أحبها.\n\nكل عام وأنتِ بخير يا أجمل هدية دخلت حياتي. ❤️',
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                              color: Color(0xFF7E5263),
+                              fontSize: 18,
+                              height: 2,
+                            ),
+                          ),
+
+                          SizedBox(height: 20),
+
+                          Text(
+                            'أحبكِ ❤️',
+                            textAlign: TextAlign.center,
+                            textDirection: TextDirection.rtl,
+                            style: TextStyle(
+                              color: Color(0xFFB52D5E),
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 40),
+
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'رجوع',
+                      style: TextStyle(
+                        color: Color(0xFF9B5A70),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// البالونات
 // ============================================================
 
 class BalloonPainter extends CustomPainter {
@@ -815,7 +977,7 @@ class BalloonPainter extends CustomPainter {
 }
 
 // ============================================================
-// رسم الكونفيتي
+// الكونفيتي
 // ============================================================
 
 class ConfettiPainter extends CustomPainter {
@@ -849,11 +1011,8 @@ class ConfettiPainter extends CustomPainter {
                   i * 13) %
               size.height;
 
-      final w =
-          3 + random.nextDouble() * 5;
-
-      final h =
-          6 + random.nextDouble() * 10;
+      final w = 3 + random.nextDouble() * 5;
+      final h = 6 + random.nextDouble() * 10;
 
       final paint = Paint()
         ..color =
@@ -889,7 +1048,7 @@ class ConfettiPainter extends CustomPainter {
 }
 
 // ============================================================
-// مربعات العد
+// مربعات الوقت
 // ============================================================
 
 class TimeBox extends StatelessWidget {
@@ -906,15 +1065,13 @@ class TimeBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 62,
-      padding: const EdgeInsets.symmetric(
-        vertical: 12,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFFF719E)
-              .withOpacity(0.3),
+          color:
+              const Color(0xFFFF719E).withOpacity(0.3),
         ),
       ),
       child: Column(
@@ -942,7 +1099,7 @@ class TimeBox extends StatelessWidget {
 }
 
 // ============================================================
-// فاصل العد
+// فاصل الوقت
 // ============================================================
 
 class TimeSeparator extends StatelessWidget {
