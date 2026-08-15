@@ -276,6 +276,8 @@ class _CelebrationPageState extends State<CelebrationPage>
 
   final AudioPlayer birthdayPlayer = AudioPlayer();
 
+  bool voicePlaying = false;
+
   @override
   void initState() {
     super.initState();
@@ -316,6 +318,36 @@ class _CelebrationPageState extends State<CelebrationPage>
       );
     } catch (e) {
       debugPrint('Birthday music error: $e');
+    }
+  }
+
+  // ==========================================================
+  // تشغيل الفويس بعد إيقاف أغنية عيد الميلاد
+  // ==========================================================
+
+  Future<void> _playVoiceMessage() async {
+    try {
+      // أولًا: إيقاف أغنية عيد الميلاد
+      await birthdayPlayer.stop();
+
+      if (!mounted) return;
+
+      setState(() {
+        voicePlaying = true;
+      });
+
+      // ثانيًا: تشغيل الفويس
+      await birthdayPlayer.play(
+        AssetSource('audio/voice_message.mp3'),
+      );
+    } catch (e) {
+      debugPrint('Voice message error: $e');
+
+      if (!mounted) return;
+
+      setState(() {
+        voicePlaying = false;
+      });
     }
   }
 
@@ -556,22 +588,14 @@ class _CelebrationPageState extends State<CelebrationPage>
                       const SizedBox(height: 35),
 
                       ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context)
-                              .showSnackBar(
-                            const SnackBar(
-                              content: Text(
-                                '🎁 الهدية الحقيقية ستظهر هنا قريبًا ❤️',
-                                textAlign: TextAlign.center,
-                              ),
-                              duration:
-                                  Duration(seconds: 3),
-                            ),
-                          );
-                        },
+                        onPressed: voicePlaying
+                            ? null
+                            : _playVoiceMessage,
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
                               const Color(0xFFFF719E),
+                          disabledBackgroundColor:
+                              const Color(0xFFFFA8BE),
                           foregroundColor: Colors.white,
                           minimumSize:
                               const Size(230, 60),
@@ -583,9 +607,11 @@ class _CelebrationPageState extends State<CelebrationPage>
                                 BorderRadius.circular(20),
                           ),
                         ),
-                        child: const Text(
-                          'الهدية 🎁',
-                          style: TextStyle(
+                        child: Text(
+                          voicePlaying
+                              ? '🎙️ أسمعيها مني ❤️'
+                              : 'الهدية 🎁',
+                          style: const TextStyle(
                             fontSize: 19,
                             fontWeight: FontWeight.bold,
                           ),
@@ -594,11 +620,13 @@ class _CelebrationPageState extends State<CelebrationPage>
 
                       const SizedBox(height: 25),
 
-                      const Text(
-                        'وهذه فقط البداية... ❤️',
+                      Text(
+                        voicePlaying
+                            ? 'استمعي... هذه الكلمات لكِ ❤️'
+                            : 'وهذه فقط البداية... ❤️',
                         textAlign: TextAlign.center,
                         textDirection: TextDirection.rtl,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Color(0xFF9B6A7B),
                           fontSize: 14,
                         ),
@@ -615,7 +643,11 @@ class _CelebrationPageState extends State<CelebrationPage>
             top: 15,
             left: 10,
             child: IconButton(
-              onPressed: () {
+              onPressed: () async {
+                await birthdayPlayer.stop();
+
+                if (!context.mounted) return;
+
                 Navigator.pop(context);
               },
               icon: const Icon(
